@@ -396,6 +396,23 @@ static VALUE cModel_classes(VALUE obj)
   return INT2NUM(svm_get_nr_class(model));
 }
 
+static VALUE cModel_class_load_from_string(VALUE cls, VALUE serialized_model)
+{
+  struct svm_model *model;
+  char path []= "/tmp/svm_model";
+  FILE *f;
+
+  // ugly hackery by writing the string first to a file and reading from it again
+  f = fopen (path, "w");
+  fprintf (f, "%s", StringValueCStr(serialized_model));
+  fclose (f);
+
+  model = svm_load_model(path);
+  remove(path);
+
+  return Data_Wrap_Struct(cModel, 0, model_free, model);
+}
+
 static VALUE cModel_class_load(VALUE cls, VALUE filename)
 {
   struct svm_model *model;
@@ -475,6 +492,7 @@ void Init_libsvm_ext() {
   rb_define_singleton_method(cModel, "train", cModel_class_train, 2);
   rb_define_singleton_method(cModel, "cross_validation", cModel_class_cross_validation, 3);
   rb_define_singleton_method(cModel, "load", cModel_class_load, 1);
+  rb_define_singleton_method(cModel, "load_from_string", cModel_class_load_from_string, 1);
   rb_define_method(cModel, "save", cModel_save, 1);
   rb_define_method(cModel, "serialize", cModel_serialize, 0);
   rb_define_method(cModel, "svm_type", cModel_svm_type, 0);

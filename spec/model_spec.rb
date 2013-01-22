@@ -52,7 +52,7 @@ describe "A saved model" do
     @filename = "tmp/svm_model.model"
     model = Model.train(create_problem, create_parameter)
     model.save(@filename)
-    @model_string = model.to_s
+    @model_string = model.serialize
   end
 
   it "can be loaded" do
@@ -63,6 +63,12 @@ describe "A saved model" do
   it "can be loaded from a string" do
     model = Model.load_from_string @model_string
     model.should_not be_nil
+  end
+
+  it "should do the same for load and load_from_string" do
+    model = Model.load @filename
+    model2 = Model.load_from_string @model_string
+    model.serialize.should == model2.serialize
   end
 
   after(:each) do
