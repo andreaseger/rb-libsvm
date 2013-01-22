@@ -14,16 +14,15 @@ module Libsvm
     # * :p = 0.1, used for EPSILON_SVR
     # * :shrinking = 1, use the shrinking heuristics
     # * :probability = 0, use the probability estimates
-    def initialize args
+    def initialize args={}
       super()
       self.svm_type    = args.fetch(:svm_type, SvmType::C_SVC)
       self.kernel_type = args.fetch(:kernel_type, KernelType::LINEAR)
-      self.C           = args.fetch(:cost, 1.0)
+      self.c           = args.fetch(:cost, 1.0)
       self.gamma       = args.fetch(:gamma, 0.0)
       self.degree      = args.fetch(:degree, 1)
       self.coef0       = args.fetch(:coef0, 0.0)
       self.eps         = args.fetch(:eps, 0.001)
-      self.nr_weight   = args.fetch(:nr_weight, 0)
       self.nu          = args.fetch(:nu, 0.5)
       self.p           = args.fetch(:p, 0.1)
       self.shrinking   = args.fetch(:shrinking, 1)
