@@ -16,8 +16,8 @@ module Libsvm
     # * :probability = 0, use the probability estimates
     def initialize args
       super()
-      self.svm_type    = args.fetch(:svm_type, Parameter::C_SVC)
-      self.kernel_type = args.fetch(:kernel_type, Parameter::LINEAR)
+      self.svm_type    = args.fetch(:svm_type, SvmType::C_SVC)
+      self.kernel_type = args.fetch(:kernel_type, KernelType::LINEAR)
       self.C           = args.fetch(:cost, 1.0)
       self.gamma       = args.fetch(:gamma, 0.0)
       self.degree      = args.fetch(:degree, 1)
