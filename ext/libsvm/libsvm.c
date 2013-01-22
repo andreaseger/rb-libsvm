@@ -394,6 +394,24 @@ static VALUE cModel_save(VALUE obj, VALUE filename)
   return Qnil;
 }
 
+static VALUE cModel_serialize(VALUE obj)
+{
+  const struct svm_model *model;
+  const char *path;
+  int rc;
+  size_t buffersize=2048;
+  char buffer[buffersize];
+
+  Data_Get_Struct(obj, struct svm_model, model);
+
+  rc = svm_serialize_model(model, buffer, buffersize);
+  if(rc < 0) {
+    rb_raise(rb_eStandardError, "Error on saving model: %i", rc);
+  }
+
+  return rb_str_new(buffer,rc);
+}
+
 static VALUE cModel_svm_type(VALUE obj)
 {
   const struct svm_model *model;
@@ -406,6 +424,23 @@ static VALUE cModel_classes(VALUE obj)
   const struct svm_model *model;
   Data_Get_Struct(obj, struct svm_model, model);
   return INT2NUM(svm_get_nr_class(model));
+}
+
+static VALUE cModel_class_load_from_string(VALUE cls, VALUE serialized_model)
+{
+  struct svm_model *model;
+  char path []= "/tmp/svm_model";
+  FILE *f;
+
+  // ugly hackery by writing the string first to a file and reading from it again
+  f = fopen (path, "w");
+  fprintf (f, "%s", StringValueCStr(serialized_model));
+  fclose (f);
+
+  model = svm_load_model(path);
+  remove(path);
+
+  return Data_Wrap_Struct(cModel, 0, model_free, model);
 }
 
 static VALUE cModel_class_load(VALUE cls, VALUE filename)
@@ -487,7 +522,9 @@ void Init_libsvm_ext() {
   rb_define_singleton_method(cModel, "train", cModel_class_train, 2);
   rb_define_singleton_method(cModel, "cross_validation", cModel_class_cross_validation, 3);
   rb_define_singleton_method(cModel, "load", cModel_class_load, 1);
+  rb_define_singleton_method(cModel, "load_from_string", cModel_class_load_from_string, 1);
   rb_define_method(cModel, "save", cModel_save, 1);
+  rb_define_method(cModel, "serialize", cModel_serialize, 0);
   rb_define_method(cModel, "svm_type", cModel_svm_type, 0);
   rb_define_method(cModel, "classes", cModel_classes, 0);
   rb_define_method(cModel, "predict", cModel_predict, 1);

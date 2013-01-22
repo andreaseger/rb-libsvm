@@ -50,7 +50,7 @@ static void info(const char *fmt,...)
 	char buf[BUFSIZ];
 	va_list ap;
 	va_start(ap,fmt);
-	vsprintf(buf,fmt,ap);
+	vcx += snprintf(buf+cx,size-cx-1,fmt,ap);
 	va_end(ap);
 	(*svm_print_string)(buf);
 }
@@ -2615,92 +2615,103 @@ static const char *kernel_type_table[]=
 	"linear","polynomial","rbf","sigmoid","precomputed",NULL
 };
 
-int svm_save_model(const char *model_file_name, const svm_model *model)
-{
-	FILE *fp = fopen(model_file_name,"w");
-	if(fp==NULL) return -1;
-
-	char *old_locale = strdup(setlocale(LC_ALL, NULL));
-	setlocale(LC_ALL, "C");
-
+int svm_serialize_model(const svm_model *model, char *buf, int size){
+	int cx;
 	const svm_parameter& param = model->param;
 
-	fprintf(fp,"svm_type %s\n", svm_type_table[param.svm_type]);
-	fprintf(fp,"kernel_type %s\n", kernel_type_table[param.kernel_type]);
+	cx = snprintf(buf,size,"svm_type %s\n", svm_type_table[param.svm_type]);
+	cx += snprintf(buf+cx,size-cx-1,"kernel_type %s\n", kernel_type_table[param.kernel_type]);
 
 	if(param.kernel_type == POLY)
-		fprintf(fp,"degree %d\n", param.degree);
+		cx += snprintf(buf+cx,size-cx-1,"degree %d\n", param.degree);
 
 	if(param.kernel_type == POLY || param.kernel_type == RBF || param.kernel_type == SIGMOID)
-		fprintf(fp,"gamma %g\n", param.gamma);
+		cx += snprintf(buf+cx,size-cx-1,"gamma %g\n", param.gamma);
 
 	if(param.kernel_type == POLY || param.kernel_type == SIGMOID)
-		fprintf(fp,"coef0 %g\n", param.coef0);
+		cx += snprintf(buf+cx,size-cx-1,"coef0 %g\n", param.coef0);
 
 	int nr_class = model->nr_class;
 	int l = model->l;
-	fprintf(fp, "nr_class %d\n", nr_class);
-	fprintf(fp, "total_sv %d\n",l);
+	cx += snprintf(buf+cx,size-cx-1, "nr_class %d\n", nr_class);
+	cx += snprintf(buf+cx,size-cx-1, "total_sv %d\n",l);
 	
 	{
-		fprintf(fp, "rho");
+		cx += snprintf(buf+cx,size-cx-1, "rho");
 		for(int i=0;i<nr_class*(nr_class-1)/2;i++)
-			fprintf(fp," %g",model->rho[i]);
-		fprintf(fp, "\n");
+			cx += snprintf(buf+cx,size-cx-1," %g",model->rho[i]);
+		cx += snprintf(buf+cx,size-cx-1, "\n");
 	}
 	
 	if(model->label)
 	{
-		fprintf(fp, "label");
+		cx += snprintf(buf+cx,size-cx-1, "label");
 		for(int i=0;i<nr_class;i++)
-			fprintf(fp," %d",model->label[i]);
-		fprintf(fp, "\n");
+			cx += snprintf(buf+cx,size-cx-1," %d",model->label[i]);
+		cx += snprintf(buf+cx,size-cx-1, "\n");
 	}
 
 	if(model->probA) // regression has probA only
 	{
-		fprintf(fp, "probA");
+		cx += snprintf(buf+cx,size-cx-1, "probA");
 		for(int i=0;i<nr_class*(nr_class-1)/2;i++)
-			fprintf(fp," %g",model->probA[i]);
-		fprintf(fp, "\n");
+			cx += snprintf(buf+cx,size-cx-1," %g",model->probA[i]);
+		cx += snprintf(buf+cx,size-cx-1, "\n");
 	}
 	if(model->probB)
 	{
-		fprintf(fp, "probB");
+		cx += snprintf(buf+cx,size-cx-1, "probB");
 		for(int i=0;i<nr_class*(nr_class-1)/2;i++)
-			fprintf(fp," %g",model->probB[i]);
-		fprintf(fp, "\n");
+			cx += snprintf(buf+cx,size-cx-1," %g",model->probB[i]);
+		cx += snprintf(buf+cx,size-cx-1, "\n");
 	}
 
 	if(model->nSV)
 	{
-		fprintf(fp, "nr_sv");
+		cx += snprintf(buf+cx,size-cx-1, "nr_sv");
 		for(int i=0;i<nr_class;i++)
-			fprintf(fp," %d",model->nSV[i]);
-		fprintf(fp, "\n");
+			cx += snprintf(buf+cx,size-cx-1," %d",model->nSV[i]);
+		cx += snprintf(buf+cx,size-cx-1, "\n");
 	}
 
-	fprintf(fp, "SV\n");
+	cx += snprintf(buf+cx,size-cx-1, "SV\n");
 	const double * const *sv_coef = model->sv_coef;
 	const svm_node * const *SV = model->SV;
 
 	for(int i=0;i<l;i++)
 	{
+		if (cx < 0){ return -1; }
 		for(int j=0;j<nr_class-1;j++)
-			fprintf(fp, "%.16g ",sv_coef[j][i]);
+			cx += snprintf(buf+cx,size-cx-1, "%.16g ",sv_coef[j][i]);
 
 		const svm_node *p = SV[i];
 
 		if(param.kernel_type == PRECOMPUTED)
-			fprintf(fp,"0:%d ",(int)(p->value));
+			cx += snprintf(buf+cx,size-cx-1,"0:%d ",(int)(p->value));
 		else
 			while(p->index != -1)
 			{
-				fprintf(fp,"%d:%.8g ",p->index,p->value);
+				if (cx < 0){ return -1; }
+				cx += snprintf(buf+cx,size-cx-1,"%d:%.8g ",p->index,p->value);
 				p++;
 			}
-		fprintf(fp, "\n");
+		cx += snprintf(buf+cx,size-cx-1, "\n");
 	}
+	return cx;
+}
+
+int svm_save_model(const char *model_file_name, const svm_model *model)
+{
+	FILE *fp = fopen(model_file_name,"w");
+	size_t buffersize=2048;
+	char buffer[buffersize];
+	if(fp==NULL) return -1;
+
+	char *old_locale = strdup(setlocale(LC_ALL, NULL));
+	setlocale(LC_ALL, "C");
+
+	svm_serialize_model(model, buffer, buffersize);
+	fprintf(fp, "%s", buffer);
 
 	setlocale(LC_ALL, old_locale);
 	free(old_locale);
