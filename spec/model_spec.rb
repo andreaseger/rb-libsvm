@@ -53,11 +53,27 @@ describe "A saved model" do
     @filename = "tmp/svm_model.model"
     model = Model.train(create_problem, create_parameter)
     model.save(@filename)
+    @model_string = model.serialize
   end
 
   it "can be loaded" do
     model = Model.load(@filename)
     model.should_not be_nil
+  end
+
+  it "can parse a string" do
+    model = Model.parse @model_string
+    model.should_not be_nil
+  end
+
+  it "should be the same after loading" do
+    model = Model.load @filename
+    model.serialize.should == IO.read(@filename)
+  end
+
+  it "should be the same after parsing" do
+    model = Model.parse @model_string
+    model.serialize.should == @model_string
   end
 
   after(:each) do
@@ -79,6 +95,15 @@ describe "An Libsvm model" do
   it "can be saved to a file" do
     @model.save(@file_path)
     File.exist?(@file_path).should be_true
+  end
+
+  it "can be serialized to a string" do
+    @model.serialize.should_not be_empty
+  end
+
+  it "should generate the same text for serialize and save" do
+    @model.save(@file_path)
+    @model.serialize.should == IO.read(@file_path)
   end
 
   it "can be asked for it's svm_type" do
