@@ -53,7 +53,7 @@ describe "A saved model" do
     @filename = "tmp/svm_model.model"
     model = Model.train(create_problem, create_parameter)
     model.save(@filename)
-    @model_string = model.serialize
+    @model_string = IO.read @filename
   end
 
   it "can be loaded" do
@@ -68,7 +68,7 @@ describe "A saved model" do
 
   it "should be the same after loading" do
     model = Model.load @filename
-    model.serialize.should == IO.read(@filename)
+    model.serialize.should == @model_string
   end
 
   it "should be the same after parsing" do

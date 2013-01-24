@@ -439,6 +439,10 @@ static VALUE cModel_class_parse(VALUE cls, VALUE serialized_model)
 {
   struct svm_model *model;
   model = svm_parse_model(StringValueCStr(serialized_model));
+  if (model == NULL)
+  {
+    return Qnil;
+  }
   return Data_Wrap_Struct(cModel, 0, model_free, model);
 }
 

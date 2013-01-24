@@ -2747,7 +2747,8 @@ int svm_serialize_model(const struct svm_model *model, char **buffer)
 		return -1;
 	}
 
-	memcpy(*buffer, mycookie.buf, mycookie.allocated);
+	memcpy(*buffer, mycookie.buf, mycookie.endpos);
+	buffer[0][mycookie.endpos] = '\0'; // correct the missing NULL-termination
 
 	if (ferror(fp) != 0 || fclose(fp) != 0) return -1;
 	else{
@@ -2998,7 +2999,7 @@ svm_model *svm_load_model(const char *model_file_name)
 	return model;
 }
 
-svm_model *svm_parse_model(char *buffer)
+svm_model *svm_parse_model(const char *buffer)
 {
 	cookie_io_functions_t  memfile_func = {
 	  .read  = memfile_read,
@@ -3011,14 +3012,16 @@ svm_model *svm_parse_model(char *buffer)
 	svm_model *model;
 
 	/* Set up the cookie before calling fopencookie() */
-	mycookie.buf = buffer;
+	mycookie.buf = (char*) malloc(strlen(buffer)*sizeof(char));
 	if (mycookie.buf == NULL) {
 	  return NULL;
 	}
 
-	mycookie.allocated = sizeof(buffer);
+	mycookie.allocated = strlen(buffer)*sizeof(char);
 	mycookie.offset = 0;
 	mycookie.endpos = strlen(buffer);
+
+	memcpy(mycookie.buf, buffer, strlen(buffer));
 
 	fp = fopencookie(&mycookie,"rb", memfile_func);
 
