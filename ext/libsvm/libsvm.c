@@ -397,7 +397,6 @@ static VALUE cModel_save(VALUE obj, VALUE filename)
 static VALUE cModel_serialize(VALUE obj)
 {
   const struct svm_model *model;
-  const char *path;
   int rc;
   size_t buffersize=2048;
   char buffer[buffersize];
