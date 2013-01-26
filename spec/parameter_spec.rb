@@ -5,7 +5,7 @@ describe "A Parameter has accessors for" do
     @p = Libsvm::SvmParameter.new
   end
   it "can be created with a constructor" do
-    ->{Libsvm::SvmParameter.new(svm_type: Libsvm::SvmType::C_SVC, cost: 23, gamma: 65)}.should_not raise_error
+    lambda{Libsvm::SvmParameter.new(svm_type: Libsvm::SvmType::C_SVC, cost: 23, gamma: 65)}.should_not raise_error
   end
   it "int svm_type" do
     SvmType::C_SVC.should == 0
