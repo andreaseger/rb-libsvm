@@ -19,6 +19,7 @@ ssize_t memfile_write(void *c, const char *buf, size_t size);
 ssize_t memfile_read(void *c, char *buf, size_t size);
 int memfile_seek(void *c, off64_t *offset, int whence);
 int memfile_close(void *c);
+cookie_io_functions_t memfile_func();
 
 #ifdef __cplusplus
 }

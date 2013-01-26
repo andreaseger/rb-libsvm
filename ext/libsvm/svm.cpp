@@ -2718,12 +2718,6 @@ int svm_save_model(const char *model_file_name, const svm_model *model)
 
 int svm_serialize_model(const struct svm_model *model, char **buffer)
 {
-	cookie_io_functions_t  memfile_func = {
-		.read  = memfile_read,
-		.write = memfile_write,
-		.seek  = memfile_seek,
-		.close = memfile_close
-	};
 	FILE *fp;
 	struct memfile_cookie mycookie;
 
@@ -2737,7 +2731,7 @@ int svm_serialize_model(const struct svm_model *model, char **buffer)
 	mycookie.offset = 0;
 	mycookie.endpos = 0;
 
-	fp = fopencookie(&mycookie,"w+", memfile_func);
+	fp = fopencookie(&mycookie,"w+", memfile_func());
 
 	svm_write_model(fp, model);
 
@@ -3001,12 +2995,6 @@ svm_model *svm_load_model(const char *model_file_name)
 
 svm_model *svm_parse_model(const char *buffer)
 {
-	cookie_io_functions_t  memfile_func = {
-	  .read  = memfile_read,
-	  .write = memfile_write,
-	  .seek  = memfile_seek,
-	  .close = memfile_close
-	};
 	FILE *fp;
 	struct memfile_cookie mycookie;
 	svm_model *model;
@@ -3023,7 +3011,7 @@ svm_model *svm_parse_model(const char *buffer)
 
 	memcpy(mycookie.buf, buffer, strlen(buffer));
 
-	fp = fopencookie(&mycookie,"rb", memfile_func);
+	fp = fopencookie(&mycookie,"rb", memfile_func());
 
 	model = svm_read_model(fp);
 

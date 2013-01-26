@@ -84,3 +84,14 @@ memfile_close(void *c)
 
   return 0;
 }
+
+cookie_io_functions_t memfile_func()
+{
+	cookie_io_functions_t  tmp;
+	tmp.read  = memfile_read;
+	tmp.write = memfile_write;
+	tmp.seek  = memfile_seek;
+	tmp.close = memfile_close;
+
+  return tmp;
+}
