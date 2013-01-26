@@ -1,6 +1,7 @@
 require 'libsvm/version'
 require 'libsvm/libsvm_ext'
 require 'libsvm/node'
+require 'libsvm/parameter'
 
 module Libsvm
   module CoreExtensions
