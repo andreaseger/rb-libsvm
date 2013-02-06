@@ -125,4 +125,9 @@ describe "An Libsvm model" do
     probabilities.should have(@model.classes).items
     probabilities.each { |e| e.should_not be_nil }
   end
+
+  it "can access the parameters" do
+    @model.should respond_to(:param)
+    @model.param.should be_a(SvmParameter)
+  end
 end

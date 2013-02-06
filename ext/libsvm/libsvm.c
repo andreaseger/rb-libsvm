@@ -426,6 +426,14 @@ static VALUE cModel_classes(VALUE obj)
   return INT2NUM(svm_get_nr_class(model));
 }
 
+static VALUE cModel_param(VALUE obj) 
+{
+  const struct svm_model *model;
+  Data_Get_Struct(obj, struct svm_model, model);
+  // dont garbage collect this parameter as it lives within the model struct
+  return Data_Wrap_Struct(cSvmParameter, 0, 0, &model->param);
+}
+
 static VALUE cModel_class_load(VALUE cls, VALUE filename)
 {
   struct svm_model *model;
@@ -523,6 +531,7 @@ void Init_libsvm_ext() {
   rb_define_method(cModel, "classes", cModel_classes, 0);
   rb_define_method(cModel, "predict", cModel_predict, 1);
   rb_define_method(cModel, "predict_probability", cModel_predict_probability, 1);
+  rb_define_method(cModel, "param", cModel_param,0);
 
   mKernelType = rb_define_module_under(mLibsvm, "KernelType");
   rb_define_const(mKernelType, "LINEAR", INT2NUM(LINEAR));
