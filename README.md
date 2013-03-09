@@ -21,7 +21,7 @@ this gem. You should install the original package if you need them.
 It is helpful to consult the [README][] of the LIBSVM package for
 reference when configuring the training parameters.
 
-Currently this package includes libsvm version 3.14.
+Currently this package includes libsvm version 3.16.
 
 ## Dependencies
 
@@ -79,13 +79,13 @@ gem's name (`rb-libsvm`).
 
 ## Author
 
-Written by C. Florian Ebeling.
+Written by [C. Florian Ebeling](https://github.com/febeling).
 
 ## Contributors
 
-[Rimas Silkaitis](https://github.com/neovintage)
-[Aleksander Pohl](https://github.com/apohllo)
-[Andreas Eger](https://github.com/sch1zo)
+* [Rimas Silkaitis](https://github.com/neovintage)
+* [Aleksander Pohl](https://github.com/apohllo)
+* [Andreas Eger](https://github.com/sch1zo)
 
 ## License
 

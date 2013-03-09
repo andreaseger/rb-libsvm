@@ -2785,6 +2785,7 @@ svm_model *svm_read_model(FILE *fp)
 	model->probB = NULL;
 	model->label = NULL;
 	model->nSV = NULL;
+    model->sv_indices = NULL;
 
 	char cmd[81];
 	while(1)
@@ -3050,6 +3051,9 @@ void svm_free_model_content(svm_model* model_ptr)
 
 	free(model_ptr->probB);
 	model_ptr->probB= NULL;
+
+	free(model_ptr->sv_indices);
+	model_ptr->sv_indices = NULL;
 
 	free(model_ptr->nSV);
 	model_ptr->nSV = NULL;
