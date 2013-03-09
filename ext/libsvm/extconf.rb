@@ -1,7 +1,8 @@
 require 'mkmf'
 
+$CFLAGS << " -fopenmp "
 $CFLAGS << " -save-temps -ggdb3 " if ENV['DEBUG']
-$LDFLAGS << " -lstdc++ "
+$LDFLAGS << " -lstdc++ -lgomp "
 
 HEADER_DIRS = []
 LIB_DIRS = []
