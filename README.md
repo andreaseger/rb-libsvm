@@ -23,6 +23,10 @@ reference when configuring the training parameters.
 
 Currently this package includes libsvm version 3.16.
 
+Uses OpenMP to paralleize libsvm for SVC_Q as described
+[here](http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f432).
+Set number of threads like this `export OMP_NUM_THREADS=8`
+
 ## Dependencies
 
 None.  LIBSVM is bundled with the project.  Just install and go!
