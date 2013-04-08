@@ -1,7 +1,6 @@
 # rb-libsvm -- Ruby language bindings for LIBSVM
 
-[![Gem Version](https://badge.fury.io/rb/rb-libsvm.png)](http://badge.fury.io/rb/rb-libsvm)
-[![Build Status](https://secure.travis-ci.org/febeling/rb-libsvm.png)](http://travis-ci.org/febeling/rb-libsvm)
+[![Build Status](https://travis-ci.org/sch1zo/rb-libsvm.png?branch=master)](https://travis-ci.org/sch1zo/rb-libsvm)
 
 This package provides a Ruby bindings to the [LIBSVM][] library.  SVM
 is a machine learning and classification algorithm, and LIBSVM is a
@@ -23,9 +22,14 @@ reference when configuring the training parameters.
 
 Currently this package includes libsvm version 3.16.
 
-Uses OpenMP to paralleize libsvm for SVC_Q as described
+## changes from febelings version
+
+- Uses OpenMP to paralleize libsvm for SVC_Q as described
 [here](http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f432).
 Set number of threads like this `export OMP_NUM_THREADS=8`
+- all output from libsvm is reenables but redirected to stderr
+capture both seperately like this `(cmd | tee stdout.log) 3>&1 1>&2 2>&3 | tee stderr.log`
+
 
 ## Dependencies
 
