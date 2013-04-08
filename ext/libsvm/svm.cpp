@@ -8,8 +8,6 @@
 #include <limits.h>
 #include <locale.h>
 #include "svm.h"
-#include "memfile.h"
-
 int libsvm_version = LIBSVM_VERSION;
 typedef float Qfloat;
 typedef signed char schar;
@@ -2619,8 +2617,11 @@ static const char *kernel_type_table[]=
 	"linear","polynomial","rbf","sigmoid","precomputed",NULL
 };
 
-void svm_write_model(FILE* fp, const svm_model *model)
+int svm_save_model(const char *model_file_name, const svm_model *model)
 {
+	FILE *fp = fopen(model_file_name,"w");
+	if(fp==NULL) return -1;
+
 	char *old_locale = strdup(setlocale(LC_ALL, NULL));
 	setlocale(LC_ALL, "C");
 
@@ -2702,54 +2703,12 @@ void svm_write_model(FILE* fp, const svm_model *model)
 			}
 		fprintf(fp, "\n");
 	}
-	fflush(fp);
+
 	setlocale(LC_ALL, old_locale);
 	free(old_locale);
-}
-
-int svm_save_model(const char *model_file_name, const svm_model *model)
-{
-	FILE *fp = fopen(model_file_name,"w");
-	if(fp==NULL) return -1;
-
-	svm_write_model(fp, model);
 
 	if (ferror(fp) != 0 || fclose(fp) != 0) return -1;
 	else return 0;
-}
-
-int svm_serialize_model(const struct svm_model *model, char **buffer)
-{
-	FILE *fp;
-	struct memfile_cookie mycookie;
-
-	/* Set up the cookie before calling fopencookie() */
-	mycookie.buf = (char*) malloc(INIT_BUF_SIZE);
-	if (mycookie.buf == NULL) {
-		return -1;
-	}
-
-	mycookie.allocated = INIT_BUF_SIZE;
-	mycookie.offset = 0;
-	mycookie.endpos = 0;
-
-	fp = fopencookie(&mycookie,"w+", memfile_func());
-
-	svm_write_model(fp, model);
-
-	// copy cookie buffer into output buffer
-	*buffer = (char*) malloc(mycookie.allocated);
-	if (*buffer == NULL) {
-		return -1;
-	}
-
-	memcpy(*buffer, mycookie.buf, mycookie.endpos);
-	buffer[0][mycookie.endpos] = '\0'; // correct the missing NULL-termination
-
-	if (ferror(fp) != 0 || fclose(fp) != 0) return -1;
-	else{
-		return 0;
-	}
 }
 
 static char *line = NULL;
@@ -2773,8 +2732,11 @@ static char* readline(FILE *input)
 	return line;
 }
 
-svm_model *svm_read_model(FILE *fp)
+svm_model *svm_load_model(const char *model_file_name)
 {
+	FILE *fp = fopen(model_file_name,"rb");
+	if(fp==NULL) return NULL;
+
 	char *old_locale = strdup(setlocale(LC_ALL, NULL));
 	setlocale(LC_ALL, "C");
 
@@ -2979,52 +2941,12 @@ svm_model *svm_read_model(FILE *fp)
 	setlocale(LC_ALL, old_locale);
 	free(old_locale);
 
-	return model;
-}
-
-svm_model *svm_load_model(const char *model_file_name)
-{
-	FILE *fp = fopen(model_file_name,"rb");
-	if(fp==NULL) return NULL;
-
-	svm_model *model = svm_read_model(fp);
-
 	if (ferror(fp) != 0 || fclose(fp) != 0)
 		return NULL;
 
 	model->free_sv = 1;	// XXX
 	return model;
 }
-
-svm_model *svm_parse_model(const char *buffer)
-{
-	FILE *fp;
-	struct memfile_cookie mycookie;
-	svm_model *model;
-
-	/* Set up the cookie before calling fopencookie() */
-	mycookie.buf = (char*) malloc(strlen(buffer)*sizeof(char));
-	if (mycookie.buf == NULL) {
-	  return NULL;
-	}
-
-	mycookie.allocated = strlen(buffer)*sizeof(char);
-	mycookie.offset = 0;
-	mycookie.endpos = strlen(buffer);
-
-	memcpy(mycookie.buf, buffer, strlen(buffer));
-
-	fp = fopencookie(&mycookie,"rb", memfile_func());
-
-	model = svm_read_model(fp);
-
-	if (ferror(fp) != 0 || fclose(fp) != 0)
-		return NULL;
-
-	model->free_sv = 1;	// XXX
-	return model;
-}
-
 
 void svm_free_model_content(svm_model* model_ptr)
 {

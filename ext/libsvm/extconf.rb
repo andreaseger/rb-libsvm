@@ -1,6 +1,6 @@
 require 'mkmf'
 
-$CFLAGS << " -fopenmp "
+$CFLAGS << " -fopenmp -march=native"
 $CFLAGS << " -save-temps -ggdb3 " if ENV['DEBUG']
 $LDFLAGS << " -lstdc++ -lgomp "
 

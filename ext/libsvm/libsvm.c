@@ -397,24 +397,6 @@ static VALUE cModel_save(VALUE obj, VALUE filename)
   return Qnil;
 }
 
-static VALUE cModel_serialize(VALUE obj)
-{
-  const struct svm_model *model;
-  char *buffer = NULL;
-  int rc;
-  VALUE output;
-
-  Data_Get_Struct(obj, struct svm_model, model);
-  if(rc = svm_serialize_model(model, &buffer)) {
-    rb_raise(rb_eStandardError, "Error on saving model, code: %i", rc);
-  }
-
-  output = rb_str_new2(buffer);
-  free(buffer);
-
-  return output;
-}
-
 static VALUE cModel_svm_type(VALUE obj)
 {
   const struct svm_model *model;
@@ -443,17 +425,6 @@ static VALUE cModel_class_load(VALUE cls, VALUE filename)
   char *path;
   path = StringValueCStr(filename);
   model = svm_load_model(path);
-  return Data_Wrap_Struct(cModel, 0, model_free, model);
-}
-
-static VALUE cModel_class_parse(VALUE cls, VALUE serialized_model)
-{
-  struct svm_model *model;
-  model = svm_parse_model(StringValueCStr(serialized_model));
-  if (model == NULL)
-  {
-    return Qnil;
-  }
   return Data_Wrap_Struct(cModel, 0, model_free, model);
 }
 
@@ -527,9 +498,7 @@ void Init_libsvm_ext() {
   rb_define_singleton_method(cModel, "train", cModel_class_train, 2);
   rb_define_singleton_method(cModel, "cross_validation", cModel_class_cross_validation, 3);
   rb_define_singleton_method(cModel, "load", cModel_class_load, 1);
-  rb_define_singleton_method(cModel, "parse", cModel_class_parse, 1);
   rb_define_method(cModel, "save", cModel_save, 1);
-  rb_define_method(cModel, "serialize", cModel_serialize, 0);
   rb_define_method(cModel, "svm_type", cModel_svm_type, 0);
   rb_define_method(cModel, "classes", cModel_classes, 0);
   rb_define_method(cModel, "predict", cModel_predict, 1);
